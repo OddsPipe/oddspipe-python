@@ -66,3 +66,17 @@ except OddsPipeError as e:
     print(e.status_code)  # 404
     print(e.body)         # {"detail": "Market not found"}
 ```
+
+A few older markets hold more than one contract on the same venue. For those,
+`history()`, `candlesticks()` and `spread()` raise `OddsPipeError` with status
+409 instead of mixing contracts; pick one with `source_id=`:
+
+```python
+try:
+    candles = client.candlesticks(market_id=123)
+except OddsPipeError as e:
+    if e.status_code != 409:
+        raise
+    first = e.body["detail"]["sources"][0]["source_id"]
+    candles = client.candlesticks(market_id=123, source_id=first)
+```

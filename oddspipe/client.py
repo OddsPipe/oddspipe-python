@@ -71,9 +71,11 @@ class OddsPipe:
             "status": status,
         }))
 
-    def market(self, market_id: int) -> dict:
-        """Get a single market with all sources and latest snapshot per source."""
-        return self._request("GET", f"/markets/{market_id}")
+    def market(self, market_id: int, source_id: int | None = None) -> dict:
+        """Get a single market with its primary source (or ``source_id``) and all source ids."""
+        return self._request("GET", f"/markets/{market_id}", self._clean({
+            "source_id": source_id,
+        }))
 
     def search(
         self,
@@ -101,10 +103,16 @@ class OddsPipe:
         market_id: int,
         source: str | None = None,
         since: str | None = None,
+        source_id: int | None = None,
     ) -> dict:
-        """Get all price snapshots for a market."""
+        """Get all price snapshots for a market.
+
+        Raises OddsPipeError (409) if the market has several sources on one
+        platform; pass ``source_id`` (listed in ``e.body["detail"]["sources"]``).
+        """
         return self._request("GET", f"/markets/{market_id}/history", self._clean({
             "source": source,
+            "source_id": source_id,
             "since": since,
         }))
 
@@ -116,19 +124,27 @@ class OddsPipe:
         start: str | None = None,
         end: str | None = None,
         limit: int = 500,
+        source_id: int | None = None,
     ) -> dict:
-        """Get OHLCV candlestick data for a market."""
+        """Get OHLCV candlestick data for a market.
+
+        Raises OddsPipeError (409) if the market has several sources on one
+        platform; pass ``source_id`` to pick one.
+        """
         return self._request("GET", f"/markets/{market_id}/candlesticks", self._clean({
             "interval": interval,
             "source": source,
+            "source_id": source_id,
             "start": start,
             "end": end,
             "limit": limit,
         }))
 
-    def spread(self, market_id: int) -> dict:
-        """Get cross-platform spread for a single market."""
-        return self._request("GET", f"/markets/{market_id}/spread")
+    def spread(self, market_id: int, source_id: int | None = None) -> dict:
+        """Get cross-platform spread for a single market (409 -> pass ``source_id``)."""
+        return self._request("GET", f"/markets/{market_id}/spread", self._clean({
+            "source_id": source_id,
+        }))
 
     def spreads(
         self,
