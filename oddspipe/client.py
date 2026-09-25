@@ -137,14 +137,20 @@ class OddsPipe:
         min_spread: float | None = None,
         min_score: float | None = None,
         top_n: int | None = None,
+        sort: str | None = None,
     ) -> dict:
-        """List all markets with cross-platform spreads, sorted by largest spread."""
+        """List all markets with cross-platform spreads.
+
+        sort: "spread" (server default, largest spread first) or "volume"
+        (most-traded pairs first).
+        """
         return self._request("GET", "/spreads", self._clean({
             "limit": limit,
             "offset": offset,
             "min_spread": min_spread,
             "min_score": min_score,
             "top_n": top_n,
+            "sort": sort,
         }))
 
     def close(self):

@@ -31,7 +31,10 @@ for c in candles["candles"]:
 # Find cross-platform price divergences
 spreads = client.spreads(min_spread=0.03)
 for item in spreads["items"]:
-    print(item["title"], item["spread"]["yes_diff"])
+    print(item["polymarket"]["title"], item["spread"]["yes_diff"])
+
+# Most-traded matched pairs first (default sort="spread": largest divergence first)
+liquid = client.spreads(sort="volume", min_score=95, limit=5)
 
 # Cross-platform spread for a single market
 spread = client.spread(market_id=123)
