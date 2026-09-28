@@ -23,10 +23,8 @@ for m in markets["items"]:
 # Search for a market
 results = client.search("Trump", platform="polymarket")
 
-# Get OHLCV candlesticks
-candles = client.candlesticks(market_id=123, interval="1h", limit=100)
-for c in candles["candles"]:
-    print(c["timestamp"], c["close"], c["volume"])
+# Latest price for a single market
+market = client.market(market_id=123)
 
 # Find cross-platform price divergences
 spreads = client.spreads(min_spread=0.03)
@@ -49,10 +47,17 @@ print(spread["spread"])
 | `markets()` | `GET /v1/markets` | List markets with latest prices |
 | `market(id)` | `GET /v1/markets/{id}` | Single market detail |
 | `search(q)` | `GET /v1/markets/search` | Full-text search |
-| `history(id)` | `GET /v1/markets/{id}/history` | Raw price snapshots |
-| `candlesticks(id)` | `GET /v1/markets/{id}/candlesticks` | OHLCV candles (1m/5m/1h/1d) |
 | `spread(id)` | `GET /v1/markets/{id}/spread` | Cross-platform spread |
 | `spreads()` | `GET /v1/spreads` | Cross-platform price spreads |
+
+## Price history retired
+
+Price history was retired on 2026-09-27. `GET /v1/markets/{id}/history` and
+`GET /v1/markets/{id}/candlesticks` now return **410 Gone**. `history()` and
+`candlesticks()` still exist so old code fails clearly: they emit a
+`DeprecationWarning` and raise `OddsPipeError` with `status_code == 410`. They
+will be removed in a future release. Use `market()` for a market's latest
+price, and `spread()` / `spreads()` for cross-platform comparisons.
 
 ## Error handling
 
@@ -68,15 +73,15 @@ except OddsPipeError as e:
 ```
 
 A few older markets hold more than one contract on the same venue. For those,
-`history()`, `candlesticks()` and `spread()` raise `OddsPipeError` with status
+`spread()` raises `OddsPipeError` with status
 409 instead of mixing contracts; pick one with `source_id=`:
 
 ```python
 try:
-    candles = client.candlesticks(market_id=123)
+    spread = client.spread(market_id=123)
 except OddsPipeError as e:
     if e.status_code != 409:
         raise
     first = e.body["detail"]["sources"][0]["source_id"]
-    candles = client.candlesticks(market_id=123, source_id=first)
+    spread = client.spread(market_id=123, source_id=first)
 ```
