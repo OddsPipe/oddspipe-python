@@ -2,7 +2,23 @@
 
 from __future__ import annotations
 
+import warnings
+
 import httpx
+
+_HISTORY_RETIRED = (
+    "OddsPipe.{name}() is deprecated: price history was retired on 2026-09-27 and "
+    "the API now returns HTTP 410 Gone for {path}. Use market() for a market's "
+    "latest price, or spread() / spreads() for cross-platform comparisons."
+)
+
+
+def _warn_history_retired(name: str, path: str) -> None:
+    warnings.warn(
+        _HISTORY_RETIRED.format(name=name, path=path),
+        DeprecationWarning,
+        stacklevel=3,
+    )
 
 
 class OddsPipeError(Exception):
@@ -105,11 +121,12 @@ class OddsPipe:
         since: str | None = None,
         source_id: int | None = None,
     ) -> dict:
-        """Get all price snapshots for a market.
+        """Deprecated: price history was retired on 2026-09-27.
 
-        Raises OddsPipeError (409) if the market has several sources on one
-        platform; pass ``source_id`` (listed in ``e.body["detail"]["sources"]``).
+        The API returns 410 Gone, raised as ``OddsPipeError``. Use ``market()``
+        for the latest price, or ``spread()`` / ``spreads()``.
         """
+        _warn_history_retired("history", "/v1/markets/{id}/history")
         return self._request("GET", f"/markets/{market_id}/history", self._clean({
             "source": source,
             "source_id": source_id,
@@ -126,11 +143,12 @@ class OddsPipe:
         limit: int = 500,
         source_id: int | None = None,
     ) -> dict:
-        """Get OHLCV candlestick data for a market.
+        """Deprecated: price history was retired on 2026-09-27.
 
-        Raises OddsPipeError (409) if the market has several sources on one
-        platform; pass ``source_id`` to pick one.
+        The API returns 410 Gone, raised as ``OddsPipeError``. Use ``market()``
+        for the latest price, or ``spread()`` / ``spreads()``.
         """
+        _warn_history_retired("candlesticks", "/v1/markets/{id}/candlesticks")
         return self._request("GET", f"/markets/{market_id}/candlesticks", self._clean({
             "interval": interval,
             "source": source,
